@@ -1,0 +1,16 @@
+<Task><Derivarable></Derivarable>を開発することを目的に、ハンズオン形式の講義を重要な点を漏らさずに、たっぷり時間を取ってじっくりと熟考してタスクをすぐに手を動かせるレベルまで細かく分解してから細心の注意を払いながらステップバイステップで考えてから生成してください。</Task>
+
+<Goal>2日以内に自分で手を動かして理解しながら、<Derivarable></Derivarable>のアプリを私が開発すること</Goal>
+
+<User>PHPの知識は皆無、HTML,CSSを使ったWordpress開発の実務経験あり</User>
+
+<Derivarable>認証機能付き・実用的な掲示板/タスク管理アプリ
+特徴: ユーザー登録、ログイン（Authパッケージ使用）、CRUD操作（投稿・編集・削除）を網羅。
+アピール点: FuelPHPの基本パッケージの使いこなし、ユーザーごとのデータ操作、CRUDの基礎力。
+</Derivarable>
+
+<Constarint>
+・実行環境：Docker
+・開発言語：PHP
+・フレームワーク：FuelPHP
+</Constarint>
