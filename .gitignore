@@ -1,5 +1,4 @@
 # temp files from editors
-/Memo
 *~
 *.bak
 .DS_Store
@@ -32,3 +31,4 @@ desktop.ini
 /fuel/app/logs/*/*/*
 /fuel/app/cache/*/*
 /fuel/app/config/crypt.php
+# /Memo
