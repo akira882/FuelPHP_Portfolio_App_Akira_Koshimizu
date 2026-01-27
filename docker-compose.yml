@@ -1,0 +1,33 @@
+# このファイルは、3つのサーバー（Web、アプリ、DB）を一度に操る「指揮者」の役目をします。
+
+services:
+  # --- 1つ目の役割：Webサーバー（Nginx） ---
+  # インターネットからのアクセスを最初に受け取る「受付係」です。
+  web:
+    image: nginx:latest # 最新のNginxを使います。
+    ports:
+      - "8080:80" # ブラウザで「localhost:8080」と打つと、このサーバーにつながります。
+    volumes:
+      - .:/var/www # 自分のパソコンのフォルダと、サーバー内のフォルダを同期させます。
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf # 設定ファイルを渡します。
+    depends_on:
+      - app # 「app（PHP）」が準備できてから起動するように指示します。
+
+  # --- 2つ目の役割：アプリケーションサーバー（PHP） ---
+  # FuelPHPのプログラムを実行する「計算機（メインの脳）」です。
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile # 別のファイルに書いた「レシピ（Dockerfile）」通りに組み立てます。
+    volumes:
+      - .:/var/www # 自分のパソコンのプログラムをこのサーバー内に反映させます。
+
+  # --- 3つ目の役割：データベース（MySQL） ---
+  # 掲示板の投稿内容を保存する「倉庫」です。
+  db:
+    image: mysql:8.0 # MySQL 8.0という倉庫を使います。
+    environment:
+      MYSQL_DATABASE: fuel_db # 作成するデータベースの名前です。
+      MYSQL_ROOT_PASSWORD: root # 管理者のパスワード。学習用なので覚えやすく「root」にしています。
+    ports:
+      - "3306:3306" # データベースに直接アクセスするためのポートです。
