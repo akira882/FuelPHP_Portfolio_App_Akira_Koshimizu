@@ -3,6 +3,7 @@
 services:
   # --- 1つ目の役割：Webサーバー（Nginx） ---
   # インターネットからのアクセスを最初に受け取る「受付係」です。
+  # nginx(エンジンエックス)は、Webサーバーの一種です。
   web:
     image: nginx:latest # 最新のNginxを使います。
     ports:
