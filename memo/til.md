@@ -3,6 +3,9 @@ This file is a collection of useful information that I have learned while studyi
 
 # 0129
 
+MVCモデルにおける、ファイルごとの仕事
+- Controller: 「今ログインしている人は誰か？」「今の時間は？」「DBからどのデータを取ってくるか？」という頭脳労働に集中します。
+- View: 「どうすれば綺麗に見えるか？」というデザイン・レイアウトに集中します。
 
 
 

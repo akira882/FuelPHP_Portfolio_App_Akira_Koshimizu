@@ -18,9 +18,13 @@ class Controller_Task extends Controller
     public function action_hello()
     {
         /**
-         * View::forge() は「見た目（HTMLファイル）を準備しろ」という命令です。
-         * ここでは views/task/hello.php を使うように指示しています。
+         * View::forge() に2つ目の引数を渡すと、
+         * 見た目（Views）の方でそのデータを使えるようになります。
          */
-        return View::forge('task/hello');
+        $data = array();
+        $data['username'] = 'ゲスト'; // 名前を渡してみる
+        $data['time'] = date('H:i:s'); // 現在時刻を渡してみる
+        
+        return View::forge('task/hello', $data);
     }
 }

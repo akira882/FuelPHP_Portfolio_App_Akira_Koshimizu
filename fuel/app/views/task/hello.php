@@ -31,8 +31,14 @@
 </head>
 <body>
     <div class="card">
-        <h1>Hello, FuelPHP!</h1>
+        <h1>こんにちは、<?php echo $username; ?>さん！</h1>
         <p>WordPressの経験を活かした、最初の自作ページです。</p>
+        
+        <div style="background: #e1f5fe; padding: 15px; border-radius: 10px; margin: 20px 0;">
+            <p><strong>現在の時刻：</strong> <?php echo $time; ?></p>
+            <p><small>※ブラウザを更新（F5）するたびに、この時間が変わります！</small></p>
+        </div>
+
         <p><strong>URL：</strong> <code>task/hello</code><br>
            <strong>担当指揮者：</strong> <code>Controller_Task</code><br>
            <strong>担当見た目：</strong> <code>task/hello.php</code></p>
