@@ -450,8 +450,8 @@ return array(
 
 	'always_load'  => array(
     'packages'  => array(
-        'auth', 
-				// ここに 'auth' を追加すると、いつでもログイン機能が使えるようになります
+        'orm',
+        'auth',
     ),
 ),
 
