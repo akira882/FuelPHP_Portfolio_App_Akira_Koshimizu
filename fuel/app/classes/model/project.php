@@ -32,6 +32,48 @@ class Model_Project extends \Orm\Model
             'key_to' => 'project_id',
             'cascade_save' => false,
             'cascade_delete' => true,
+        ),
+        'members' => array(
+            'key_from' => 'id',
+            'model_to' => 'Model_ProjectMember',
+            'key_to' => 'project_id',
+            'cascade_save' => false,
+            'cascade_delete' => true,
+        ),
+        'files' => array(
+            'key_from' => 'id',
+            'model_to' => 'Model_ProjectFile',
+            'key_to' => 'project_id',
+            'cascade_save' => false,
+            'cascade_delete' => true,
         )
     );
+
+    public function has_access($user_id)
+    {
+        if ($this->user_id == $user_id) {
+            return true;
+        }
+
+        $member = Model_ProjectMember::query()
+            ->where('project_id', $this->id)
+            ->where('user_id', $user_id)
+            ->get_one();
+
+        return $member !== null;
+    }
+
+    public function get_role($user_id)
+    {
+        if ($this->user_id == $user_id) {
+            return 'owner';
+        }
+
+        $member = Model_ProjectMember::query()
+            ->where('project_id', $this->id)
+            ->where('user_id', $user_id)
+            ->get_one();
+
+        return $member ? $member->role : null;
+    }
 }

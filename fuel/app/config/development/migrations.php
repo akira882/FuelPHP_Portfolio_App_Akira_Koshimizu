@@ -6,6 +6,9 @@ return array (
         0 => '001_create_tasks',
         1 => '002_create_projects',
         2 => '003_add_project_id_to_tasks',
+        3 => '004_create_task_checklists',
+        4 => '005_create_project_members',
+        5 => '006_create_project_files',
       ),
     ),
     'module' => array(    
