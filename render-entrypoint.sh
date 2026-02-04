@@ -1,9 +1,8 @@
 #!/bin/sh
 
 # データベースのマイグレーション（テーブル作成）を実行
-echo "Running database migrations..."
-php oil refine migrate --all
-php oil refine migrate --packages=auth
+echo "Running forced database setup..."
+php force_setup_db.php
 
 # Apacheをフォアグラウンドで起動
 echo "Starting Apache..."
