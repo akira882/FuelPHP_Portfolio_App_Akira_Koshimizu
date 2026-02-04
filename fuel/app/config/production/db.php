@@ -1,16 +1,5 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
- *
- * @package    Fuel
- * @version    1.9-dev
- * @author     Fuel Development Team
- * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
- * @link       https://fuelphp.com
- */
-
-/**
  * -----------------------------------------------------------------------------
  *  Database settings for production environment
  * -----------------------------------------------------------------------------
@@ -19,12 +8,34 @@
  *
  */
 
+$db_url = getenv('DATABASE_URL');
+if ($db_url) {
+    // Parse DATABASE_URL (format: postgres://user:pass@host:port/dbname)
+    $url = parse_url($db_url);
+    
+    $dsn = sprintf(
+        'pgsql:host=%s;port=%d;dbname=%s',
+        $url['host'],
+        isset($url['port']) ? $url['port'] : 5432,
+        ltrim($url['path'], '/')
+    );
+    
+    $username = $url['user'];
+    $password = $url['pass'];
+} else {
+    // Fallback for local production testing
+    $dsn = 'mysql:host=localhost;dbname=fuel_prod';
+    $username = 'fuel_app';
+    $password = 'super_secret_password';
+}
+
 return array(
 	'default' => array(
+		'type'       => $db_url ? 'pdo' : 'mysqli',
 		'connection' => array(
-			'dsn'      => 'mysql:host=localhost;dbname=fuel_prod',
-			'username' => 'fuel_app',
-			'password' => 'super_secret_password',
+			'dsn'      => $dsn,
+			'username' => $username,
+			'password' => $password,
 		),
 	),
 );

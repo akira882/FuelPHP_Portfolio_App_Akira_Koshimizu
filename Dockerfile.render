@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
   libonig-dev \
   libxml2-dev \
   libzip-dev \
-  && docker-php-ext-install pdo_mysql mbstring gd zip
+  libpq-dev \
+  && docker-php-ext-install pdo_mysql pdo_pgsql mbstring gd zip
 
 # 2. Apacheの mod_rewrite と headers を有効化
 RUN a2enmod rewrite headers
