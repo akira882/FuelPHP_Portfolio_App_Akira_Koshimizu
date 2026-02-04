@@ -37,5 +37,10 @@ return array(
 			'username' => $username,
 			'password' => $password,
 		),
+		'identifier' => $db_url ? '"' : '`',
+		'table_prefix' => '',
+		'charset'      => 'utf8',
+		'enable_cache' => true,
+		'profiling'    => false,
 	),
 );
