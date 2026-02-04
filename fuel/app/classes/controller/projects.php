@@ -43,8 +43,7 @@ class Controller_Projects extends Controller_Base
 
         $filter = Input::get('filter', 'all');
         $query = Model_Task::query()
-            ->where('project_id', $project->id)
-            ->where('user_id', $user_id[1]);
+            ->where('project_id', $project->id);
 
         if ($filter === 'pending') {
             $query->where('done', 0);
@@ -53,7 +52,7 @@ class Controller_Projects extends Controller_Base
         }
 
         $data['project'] = $project;
-        $data['tasks'] = $query->order_by('created_at', 'desc')->get();
+        $data['tasks'] = $query->order_by('priority', 'desc')->order_by('due_date', 'asc')->order_by('created_at', 'desc')->get();
         $data['filter'] = $filter;
         $data['total'] = Model_Task::query()->where('project_id', $project->id)->count();
         $data['completed'] = Model_Task::query()->where('project_id', $project->id)->where('done', 1)->count();
@@ -145,10 +144,18 @@ class Controller_Projects extends Controller_Base
         }
 
         if (Input::method() === 'POST') {
+            $upload_path = DOCROOT . 'uploads/projects/' . $project->id . '/';
+
+            // Create directory if it doesn't exist
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0777, true);
+            }
+
             $config = array(
-                'path' => DOCROOT . 'uploads/projects/' . $project->id . '/',
+                'path' => $upload_path,
                 'randomize' => true,
                 'ext_whitelist' => array('img', 'jpg', 'jpeg', 'gif', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'csv'),
+                'max_size' => 10 * 1024 * 1024, // 10MB max
             );
 
             Upload::process($config);
@@ -171,7 +178,9 @@ class Controller_Projects extends Controller_Base
                     Session::set_flash('error', 'ファイルの保存に失敗しました');
                 }
             } else {
-                Session::set_flash('error', 'ファイルのアップロードに失敗しました: ' . Upload::get_errors());
+                $errors = Upload::get_errors();
+                $error_msg = is_array($errors) ? implode(', ', $errors[0]['errors']) : 'ファイルのアップロードに失敗しました';
+                Session::set_flash('error', $error_msg);
             }
         }
 
@@ -294,5 +303,36 @@ class Controller_Projects extends Controller_Base
         }
 
         Response::redirect('projects');
+    }
+
+    public function action_download_file($project_id, $file_id)
+    {
+        $user_id = Auth::get_user_id();
+        $project = Model_Project::find($project_id);
+        $file = Model_ProjectFile::find($file_id);
+
+        if (!$project || !$project->has_access($user_id[1])) {
+            Session::set_flash('error', 'アクセス権限がありません');
+            Response::redirect('projects');
+        }
+
+        if (!$file || $file->project_id != $project_id) {
+            Session::set_flash('error', 'ファイルが見つかりません');
+            Response::redirect('projects/view/' . $project_id);
+        }
+
+        $filepath = DOCROOT . $file->filepath;
+
+        if (!file_exists($filepath)) {
+            Session::set_flash('error', 'ファイルが存在しません');
+            Response::redirect('projects/view/' . $project_id);
+        }
+
+        // Return file for download
+        return Response::forge(file_get_contents($filepath), 200, array(
+            'Content-Type' => $file->mimetype,
+            'Content-Disposition' => 'attachment; filename="' . $file->filename . '"',
+            'Content-Length' => filesize($filepath),
+        ));
     }
 }

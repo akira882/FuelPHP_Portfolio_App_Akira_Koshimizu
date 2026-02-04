@@ -15,7 +15,7 @@ class Controller_Tasks extends Controller_Base
             $query->where('done', 1);
         }
 
-        $data['tasks'] = $query->order_by('created_at', 'desc')->get();
+        $data['tasks'] = $query->order_by('priority', 'desc')->order_by('due_date', 'asc')->order_by('created_at', 'desc')->get();
         $data['filter'] = $filter;
         $data['total'] = Model_Task::query()->where('user_id', $user_id[1])->count();
         $data['completed'] = Model_Task::query()->where('user_id', $user_id[1])->where('done', 1)->count();
@@ -41,6 +41,9 @@ class Controller_Tasks extends Controller_Base
             $val->add('title', 'タイトル')
                 ->add_rule('required')
                 ->add_rule('max_length', 255);
+            $val->add('priority', '優先度')
+                ->add_rule('numeric_min', 0)
+                ->add_rule('numeric_max', 2);
 
             if ($val->run()) {
                 $task = Model_Task::forge();
@@ -49,6 +52,15 @@ class Controller_Tasks extends Controller_Base
                 $task->user_id = $user_id[1];
                 $task->project_id = $project_id;
                 $task->done = 0;
+                $task->priority = Input::post('priority', 1);
+
+                // Convert due_date string to Unix timestamp
+                $due_date_str = Input::post('due_date');
+                if ($due_date_str) {
+                    $task->due_date = strtotime($due_date_str . ' 23:59:59');
+                } else {
+                    $task->due_date = null;
+                }
 
                 if ($task->save()) {
                     Session::set_flash('success', 'タスクを作成しました');
@@ -96,10 +108,22 @@ class Controller_Tasks extends Controller_Base
             $val->add('title', 'タイトル')
                 ->add_rule('required')
                 ->add_rule('max_length', 255);
+            $val->add('priority', '優先度')
+                ->add_rule('numeric_min', 0)
+                ->add_rule('numeric_max', 2);
 
             if ($val->run()) {
                 $task->title = Input::post('title');
                 $task->content = Input::post('content');
+                $task->priority = Input::post('priority', 1);
+
+                // Convert due_date string to Unix timestamp
+                $due_date_str = Input::post('due_date');
+                if ($due_date_str) {
+                    $task->due_date = strtotime($due_date_str . ' 23:59:59');
+                } else {
+                    $task->due_date = null;
+                }
 
                 if ($task->save()) {
                     Session::set_flash('success', 'タスクを更新しました');
@@ -246,9 +270,34 @@ class Controller_Tasks extends Controller_Base
         $user_id = Auth::get_user_id();
         $task = Model_Task::find($id);
 
-        if (!$task || $task->user_id != $user_id[1]) {
+        if (!$task) {
             Session::set_flash('error', 'タスクが見つかりません');
             Response::redirect('tasks');
+        }
+
+        // Access control: check if user has permission to toggle this task
+        $has_permission = false;
+
+        if ($task->project_id) {
+            // For project tasks: check if user has access to the project
+            $project = Model_Project::find($task->project_id);
+            if ($project && $project->has_access($user_id[1])) {
+                $has_permission = true;
+            }
+        } else {
+            // For personal tasks: only the owner can toggle
+            if ($task->user_id == $user_id[1]) {
+                $has_permission = true;
+            }
+        }
+
+        if (!$has_permission) {
+            Session::set_flash('error', 'アクセス権限がありません');
+            if ($task->project_id) {
+                Response::redirect('projects');
+            } else {
+                Response::redirect('tasks');
+            }
         }
 
         $task->done = !$task->done;

@@ -189,6 +189,34 @@
         }
         .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.3; }
         .empty-text { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+        }
+        .due-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+        .due-date.overdue {
+            color: #ff7b72;
+            font-weight: 600;
+        }
+        .task-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
@@ -247,6 +275,19 @@
                         <?php if ($task->content): ?>
                             <div class="task-meta"><?php echo htmlspecialchars($task->content); ?></div>
                         <?php endif; ?>
+                        <div class="task-badges">
+                            <span class="priority-badge" style="background: <?php echo $task->get_priority_color(); ?>20; color: <?php echo $task->get_priority_color(); ?>; border: 1px solid <?php echo $task->get_priority_color(); ?>;">
+                                <?php echo $task->get_priority_label(); ?>
+                            </span>
+                            <?php if ($task->due_date): ?>
+                                <span class="due-date <?php echo $task->is_overdue() ? 'overdue' : ''; ?>">
+                                    📅 <?php echo date('Y-m-d', $task->due_date); ?>
+                                    <?php if ($task->is_overdue()): ?>
+                                        (期限切れ)
+                                    <?php endif; ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
                         <div class="task-meta"><?php echo date('Y-m-d H:i', $task->created_at); ?></div>
                     </div>
                     <div class="task-actions">

@@ -135,6 +135,20 @@
                 <textarea name="content"></textarea>
             </div>
 
+            <div class="form-group">
+                <label>優先度</label>
+                <select name="priority" style="width: 100%; padding: 12px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; font-size: 14px; color: #c9d1d9; font-family: inherit;">
+                    <option value="0">低</option>
+                    <option value="1" selected>中</option>
+                    <option value="2">高</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>期限</label>
+                <input type="date" name="due_date" style="width: 100%; padding: 12px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; font-size: 14px; color: #c9d1d9; font-family: inherit;">
+            </div>
+
             <div class="buttons">
                 <button type="submit" class="btn btn-primary">作成する</button>
                 <a href="<?php echo Uri::create('tasks'); ?>" class="btn btn-secondary">キャンセル</a>

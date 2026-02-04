@@ -39,4 +39,71 @@ class Model_ProjectFile extends \Orm\Model
             'key_to' => 'id',
         )
     );
+
+    /**
+     * Get file extension
+     * @return string
+     */
+    public function get_extension()
+    {
+        return strtolower(pathinfo($this->filename, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Get file icon based on extension
+     * @return string
+     */
+    public function get_icon()
+    {
+        $ext = $this->get_extension();
+
+        $icons = array(
+            // Documents
+            'pdf' => '📄',
+            'doc' => '📝',
+            'docx' => '📝',
+            'txt' => '📝',
+            // Spreadsheets
+            'xls' => '📊',
+            'xlsx' => '📊',
+            'csv' => '📊',
+            // Images
+            'jpg' => '🖼️',
+            'jpeg' => '🖼️',
+            'png' => '🖼️',
+            'gif' => '🖼️',
+            'svg' => '🖼️',
+            // Archives
+            'zip' => '🗜️',
+            'rar' => '🗜️',
+            '7z' => '🗜️',
+            // Code
+            'php' => '💻',
+            'js' => '💻',
+            'html' => '💻',
+            'css' => '💻',
+            'json' => '💻',
+        );
+
+        return isset($icons[$ext]) ? $icons[$ext] : '📎';
+    }
+
+    /**
+     * Format file size
+     * @return string
+     */
+    public function get_formatted_size()
+    {
+        $bytes = $this->filesize;
+
+        if ($bytes >= 1073741824) {
+            return number_format($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return number_format($bytes / 1024, 2) . ' KB';
+        } else {
+            return $bytes . ' bytes';
+        }
+    }
 }

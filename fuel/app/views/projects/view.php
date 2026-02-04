@@ -434,6 +434,43 @@
             transition: all 0.2s;
         }
         .btn-download:hover { background: rgba(31, 111, 235, 0.2); }
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+        }
+        .due-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+        .due-date.overdue {
+            color: #ff7b72;
+            font-weight: 600;
+        }
+        .task-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .task-creator {
+            font-size: 12px;
+            color: #6e7681;
+            margin-top: 4px;
+        }
+        .task-creator-name {
+            color: #8b949e;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -514,7 +551,22 @@
                             <?php if ($task->content): ?>
                                 <div class="task-meta"><?php echo htmlspecialchars($task->content); ?></div>
                             <?php endif; ?>
-                            <div class="task-meta"><?php echo date('M j, Y', $task->created_at); ?></div>
+                            <div class="task-badges">
+                                <span class="priority-badge" style="background: <?php echo $task->get_priority_color(); ?>20; color: <?php echo $task->get_priority_color(); ?>; border: 1px solid <?php echo $task->get_priority_color(); ?>;">
+                                    <?php echo $task->get_priority_label(); ?>
+                                </span>
+                                <?php if ($task->due_date): ?>
+                                    <span class="due-date <?php echo $task->is_overdue() ? 'overdue' : ''; ?>">
+                                        📅 <?php echo date('M j, Y', $task->due_date); ?>
+                                        <?php if ($task->is_overdue()): ?>
+                                            (期限切れ)
+                                        <?php endif; ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="task-meta">
+                                Created: <?php echo date('M j, Y', $task->created_at); ?>
+                            </div>
                         </div>
                         <div class="task-actions">
                             <a href="<?php echo Uri::create('tasks/delete/' . $task->id); ?>" class="btn btn-delete" onclick="event.stopPropagation(); return confirm('本当に削除しますか？')">Delete</a>
@@ -523,6 +575,49 @@
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        <!-- Files Section -->
+        <h2 class="section-title">📁 Files & Documents</h2>
+
+        <div class="upload-form">
+            <h3>Upload File</h3>
+            <form method="POST" action="<?php echo Uri::create('projects/upload/' . $project->id); ?>" enctype="multipart/form-data">
+                <?php echo Form::csrf(); ?>
+                <input type="file" name="file" class="file-input" required>
+                <button type="submit" class="btn-upload">Upload</button>
+            </form>
+            <div style="margin-top: 12px; font-size: 12px; color: #8b949e;">
+                Allowed types: PDF, DOC, DOCX, XLS, XLSX, ZIP, TXT, CSV, Images (JPG, PNG, GIF) • Max size: 20MB
+            </div>
+        </div>
+
+        <?php if (!empty($files)): ?>
+            <div class="files-list">
+                <?php foreach ($files as $file): ?>
+                    <div class="file-item">
+                        <div class="file-icon"><?php echo $file->get_icon(); ?></div>
+                        <div class="file-info">
+                            <div class="file-name"><?php echo htmlspecialchars($file->filename); ?></div>
+                            <div class="file-meta">
+                                <span><?php echo $file->get_formatted_size(); ?></span>
+                                <span>Uploaded: <?php echo date('M j, Y', $file->created_at); ?></span>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <a href="<?php echo Uri::create('projects/download_file/' . $project->id . '/' . $file->id); ?>" class="btn btn-download">Download</a>
+                            <?php if ($user_role === 'owner' || $file->user_id == Auth::get_user_id()[1]): ?>
+                                <a href="<?php echo Uri::create('projects/delete_file/' . $project->id . '/' . $file->id); ?>" class="btn btn-delete" onclick="return confirm('本当に削除しますか？')">Delete</a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="empty">
+                <div class="empty-icon">📂</div>
+                <div class="empty-text">No files uploaded yet</div>
+            </div>
+        <?php endif; ?>
     </div>
 </body>
 </html>

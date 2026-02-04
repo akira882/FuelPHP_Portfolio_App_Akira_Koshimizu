@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
 # これは、FuelPHPなどの「他人が作った便利な部品」を簡単に取り入れるための道具です。
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# 3.5 PHPのアップロード設定を追加
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # 4. 作業をする場所（フォルダ）を決めます。
 # これ以降の命令は、この場所で行われます。
 WORKDIR /var/www

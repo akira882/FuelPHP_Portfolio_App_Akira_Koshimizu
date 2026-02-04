@@ -9,6 +9,7 @@ return array (
         3 => '004_create_task_checklists',
         4 => '005_create_project_members',
         5 => '006_create_project_files',
+        6 => '007_add_priority_and_due_date_to_tasks',
       ),
     ),
     'module' => array(    
