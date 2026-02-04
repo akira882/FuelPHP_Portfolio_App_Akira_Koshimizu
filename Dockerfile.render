@@ -1,5 +1,6 @@
 # Renderデプロイ用の完成版レシピ（Dockerfile）
 FROM php:8.2-apache
+ENV FUEL_ENV production
 
 # 1. 必要なライブラリのインストール
 RUN apt-get update && apt-get install -y \
