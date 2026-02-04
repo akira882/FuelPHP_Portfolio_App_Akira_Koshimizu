@@ -42,8 +42,12 @@ COPY . .
 # 6. 依存関係のインストール (本番環境用)
 RUN composer install --no-dev --optimize-autoloader
 
-# 7. フォルダの権限設定
+# 7. フォルダの権限設定とエントリポイントの準備
 RUN chown -R www-data:www-data fuel/app/cache fuel/app/logs fuel/app/tmp public/assets
+RUN chmod +x render-entrypoint.sh
 
 # 8. ポート80（HTTP標準）で待ち受け
 EXPOSE 80
+
+# 9. 起動時にマイグレーションを実行
+CMD ["./render-entrypoint.sh"]
