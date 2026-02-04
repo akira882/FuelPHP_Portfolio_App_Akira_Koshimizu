@@ -500,11 +500,22 @@
             </div>
         <?php endif; ?>
 
-        <?php if (Session::get_flash('error')): ?>
-            <div class="flash error">⚠️ <?php echo htmlspecialchars(Session::get_flash('error')); ?></div>
+        <?php if ($error = Session::get_flash('error')): ?>
+            <div class="flash error">
+                ⚠️ 
+                <?php if (is_array($error)): ?>
+                    <ul style="list-style: none; display: inline; padding: 0; margin: 0;">
+                        <?php foreach ($error as $e): ?>
+                            <li><?php echo htmlspecialchars((string)$e); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <?php echo htmlspecialchars($error); ?>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
-        <?php if (Session::get_flash('success')): ?>
-            <div class="flash success">✓ <?php echo htmlspecialchars(Session::get_flash('success')); ?></div>
+        <?php if ($success = Session::get_flash('success')): ?>
+            <div class="flash success">✓ <?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
 
         <div class="stats">

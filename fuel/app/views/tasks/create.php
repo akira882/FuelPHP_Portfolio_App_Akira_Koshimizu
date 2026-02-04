@@ -118,8 +118,18 @@
         <a href="<?php echo Uri::create('tasks'); ?>" class="back-link">← タスク一覧に戻る</a>
         <h1>新しいタスクを作成</h1>
 
-        <?php if (Session::get_flash('error')): ?>
-            <div class="flash error"><?php echo htmlspecialchars(Session::get_flash('error')); ?></div>
+        <?php if ($error = Session::get_flash('error')): ?>
+            <div class="flash error">
+                <?php if (is_array($error)): ?>
+                    <ul style="list-style: none; padding: 0;">
+                        <?php foreach ($error as $e): ?>
+                            <li><?php echo htmlspecialchars((string)$e); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <?php echo htmlspecialchars($error); ?>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
 
         <?php echo Form::open(); ?>
