@@ -21,5 +21,9 @@
  */
 
 return array(
+	'active' => 'default',
 
+	'default' => array(
+		'identifier' => getenv('DATABASE_URL') ? '"' : '`',
+	),
 );
