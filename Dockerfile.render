@@ -1,0 +1,39 @@
+# Renderデプロイ用のレシピ（Dockerfile）
+# ApacheとPHPがセットになった Dockerイメージを使います。
+FROM php:8.2-apache
+
+# 1. 必要なライブラリのインストール
+RUN apt-get update && apt-get install -y \
+  git \
+  unzip \
+  libpng-dev \
+  libonig-dev \
+  libxml2-dev \
+  libzip-dev \
+  && docker-php-ext-install pdo_mysql mbstring gd zip
+
+# 2. Apacheの mod_rewrite を有効化（FuelPHPのURLルーティングに必要）
+RUN a2enmod rewrite
+
+# 3. Apacheのドキュメントルートを /var/www/html/public に変更
+# FuelPHPは public フォルダが公開用ディレクトリのため
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf.d/*.conf
+
+# 4. Composerのインストール
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 5. プログラムファイルのコピー
+WORKDIR /var/www/html
+COPY . .
+
+# 6. 依存関係のインストール (本番環境用)
+RUN composer install --no-dev --optimize-autoloader
+
+# 7. フォルダの権限設定
+# FuelPHPが書き込みを行うフォルダに Apache実行ユーザー（www-data）の権限を与えます
+RUN chown -R www-data:www-data fuel/app/cache fuel/app/logs fuel/app/tmp public/assets
+
+# 8. ポート80（HTTP標準）で待ち受け
+EXPOSE 80

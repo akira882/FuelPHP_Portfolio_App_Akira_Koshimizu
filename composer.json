@@ -40,9 +40,6 @@
         }
     },
     "scripts": {
-        "post-install-cmd": [
-            "php oil r install"
-        ]
     },
     "minimum-stability": "stable"
 }
