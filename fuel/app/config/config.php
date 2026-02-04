@@ -214,10 +214,10 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'csrf_autoload'            => false,
-		// 'csrf_autoload_methods'    => array('post', 'put', 'delete'),
-		// 'csrf_bad_request_on_fail' => false,
-		// 'csrf_auto_token'          => false,
+		'csrf_autoload'            => true,
+		'csrf_autoload_methods'    => array('post', 'put', 'delete'),
+		'csrf_bad_request_on_fail' => true,
+		'csrf_auto_token'          => true,
 		// 'csrf_token_key'           => 'fuel_csrf_token',
 		// 'csrf_expiration'          => 0,
 
@@ -241,7 +241,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'allow_x_headers' => false,
+		'allow_x_headers' => true,
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -347,15 +347,8 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'secure' => false,
-
-		/**
-		 * ---------------------------------------------------------------------
-		 *  Only transmit cookies over HTTP, disabling Javascript access
-		 * ---------------------------------------------------------------------
-		 */
-
-		// 'http_only' => false,
+		'secure' => true,
+		'http_only' => true,
 	// ),
 
 	/**
