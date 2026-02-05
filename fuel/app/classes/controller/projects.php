@@ -12,16 +12,19 @@ class Controller_Projects extends Controller_Base
             ->order_by('created_at', 'desc')
             ->get();
 
-        // Member projects
-        $member_ids = Model_ProjectMember::query()
+        // Member projects - Eager Loading でN+1問題を解消（World Class対応）
+        // Before: N+1クエリ（1回 + プロジェクト数N回）
+        // After: 1回のJOINクエリで完結
+        $member_records = Model_ProjectMember::query()
             ->where('user_id', $user_id[1])
+            ->related('project') // Eager Loading: プロジェクト情報を事前読み込み
             ->get();
 
+        // Eager Loadingされたプロジェクトを抽出（追加クエリなし）
         $member_projects = array();
-        foreach ($member_ids as $member) {
-            $project = Model_Project::find($member->project_id);
-            if ($project) {
-                $member_projects[] = $project;
+        foreach ($member_records as $member) {
+            if ($member->project) {
+                $member_projects[] = $member->project;
             }
         }
 
@@ -51,12 +54,23 @@ class Controller_Projects extends Controller_Base
             $query->where('done', 1);
         }
 
+        // タスク一覧取得
+        $data['tasks'] = $query
+            ->order_by('priority', 'desc')
+            ->order_by('due_date', 'asc')
+            ->order_by('created_at', 'desc')
+            ->get();
+
+        // 統計情報を1回のクエリで取得（World Class最適化）
+        // Before: 3回のクエリ
+        // After: 1回のクエリ
+        $statistics = Model_Project::get_task_statistics($project->id);
+
         $data['project'] = $project;
-        $data['tasks'] = $query->order_by('priority', 'desc')->order_by('due_date', 'asc')->order_by('created_at', 'desc')->get();
         $data['filter'] = $filter;
-        $data['total'] = Model_Task::query()->where('project_id', $project->id)->count();
-        $data['completed'] = Model_Task::query()->where('project_id', $project->id)->where('done', 1)->count();
-        $data['pending'] = Model_Task::query()->where('project_id', $project->id)->where('done', 0)->count();
+        $data['total'] = $statistics['total'];
+        $data['completed'] = $statistics['completed'];
+        $data['pending'] = $statistics['pending'];
         $data['user_role'] = $project->get_role($user_id[1]);
         $data['members'] = $project->members;
         $data['files'] = $project->files;
@@ -328,11 +342,34 @@ class Controller_Projects extends Controller_Base
             Response::redirect('projects/view/' . $project_id);
         }
 
-        // Return file for download
-        return Response::forge(file_get_contents($filepath), 200, array(
-            'Content-Type' => $file->mimetype,
-            'Content-Disposition' => 'attachment; filename="' . $file->filename . '"',
-            'Content-Length' => filesize($filepath),
-        ));
+        // ストリーム処理でファイルダウンロード（World Class最適化）
+        // Before: file_get_contents() - 全体をメモリに読み込み（メモリ枯渇リスク）
+        // After: ストリーム処理 - チャンク単位で送信（メモリ効率的）
+
+        // HTTPヘッダー設定
+        header('Content-Type: ' . $file->mimetype);
+        header('Content-Disposition: attachment; filename="' . $file->filename . '"');
+        header('Content-Length: ' . filesize($filepath));
+        header('Pragma: public');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Expires: 0');
+
+        // 出力バッファをクリア
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // ストリーム処理でファイル送信（8KBチャンク）
+        // メモリ使用量: ファイルサイズに関わらず最大8KB
+        $handle = fopen($filepath, 'rb');
+        if ($handle) {
+            while (!feof($handle)) {
+                echo fread($handle, 8192); // 8KBチャンクで送信
+                flush(); // バッファをフラッシュ
+            }
+            fclose($handle);
+        }
+
+        exit(); // レスポンス送信後に終了
     }
 }

@@ -10,16 +10,25 @@ class Controller_Tasks extends Controller_Base
         $query = Model_Task::query()->where('user_id', $user_id[1]);
 
         if ($filter === 'pending') {
-            $query->where('done', 0);
+            $query->where('done', Model_Task::STATUS_INCOMPLETE);
         } elseif ($filter === 'completed') {
-            $query->where('done', 1);
+            $query->where('done', Model_Task::STATUS_COMPLETE);
         }
 
-        $data['tasks'] = $query->order_by('priority', 'desc')->order_by('due_date', 'asc')->order_by('created_at', 'desc')->get();
+        // 1回のクエリでタスク一覧取得
+        $data['tasks'] = $query
+            ->order_by('priority', 'desc')
+            ->order_by('due_date', 'asc')
+            ->order_by('created_at', 'desc')
+            ->get();
+
+        // 1回のクエリで統計情報取得（4回→2回に最適化）
+        $statistics = Model_Task::get_statistics($user_id[1]);
+
         $data['filter'] = $filter;
-        $data['total'] = Model_Task::query()->where('user_id', $user_id[1])->count();
-        $data['completed'] = Model_Task::query()->where('user_id', $user_id[1])->where('done', 1)->count();
-        $data['pending'] = Model_Task::query()->where('user_id', $user_id[1])->where('done', 0)->count();
+        $data['total'] = $statistics['total'];
+        $data['completed'] = $statistics['completed'];
+        $data['pending'] = $statistics['pending'];
 
         return View::forge('tasks/index', $data);
     }
@@ -51,8 +60,8 @@ class Controller_Tasks extends Controller_Base
                 $task->content = Input::post('content');
                 $task->user_id = $user_id[1];
                 $task->project_id = $project_id;
-                $task->done = 0;
-                $task->priority = Input::post('priority', 1);
+                $task->done = Model_Task::STATUS_INCOMPLETE;
+                $task->priority = Input::post('priority', Model_Task::PRIORITY_MEDIUM);
 
                 // Convert due_date string to Unix timestamp
                 $due_date_str = Input::post('due_date');
@@ -86,20 +95,8 @@ class Controller_Tasks extends Controller_Base
         $user_id = Auth::get_user_id();
         $task = Model_Task::find($id);
 
-        if (!$task) {
-            Session::set_flash('error', 'タスクが見つかりません');
-            Response::redirect('tasks');
-        }
-
-        // Access control: check project access if task belongs to a project
-        if ($task->project_id) {
-            $project = Model_Project::find($task->project_id);
-            if (!$project || !$project->has_access($user_id[1])) {
-                Session::set_flash('error', 'アクセス権限がありません');
-                Response::redirect('projects');
-            }
-        } else if ($task->user_id != $user_id[1]) {
-            Session::set_flash('error', 'タスクが見つかりません');
+        if (!$task || !$task->can_edit($user_id[1])) {
+            Session::set_flash('error', 'アクセス権限がありません');
             Response::redirect('tasks');
         }
 
@@ -115,7 +112,7 @@ class Controller_Tasks extends Controller_Base
             if ($val->run()) {
                 $task->title = Input::post('title');
                 $task->content = Input::post('content');
-                $task->priority = Input::post('priority', 1);
+                $task->priority = Input::post('priority', Model_Task::PRIORITY_MEDIUM);
 
                 // Convert due_date string to Unix timestamp
                 $due_date_str = Input::post('due_date');
@@ -150,18 +147,7 @@ class Controller_Tasks extends Controller_Base
         $user_id = Auth::get_user_id();
         $task = Model_Task::find($task_id);
 
-        if (!$task) {
-            Session::set_flash('error', 'タスクが見つかりません');
-            Response::redirect('tasks');
-        }
-
-        if ($task->project_id) {
-            $project = Model_Project::find($task->project_id);
-            if (!$project || !$project->has_access($user_id[1])) {
-                Session::set_flash('error', 'アクセス権限がありません');
-                Response::redirect('projects');
-            }
-        } else if ($task->user_id != $user_id[1]) {
+        if (!$task || !$task->can_edit($user_id[1])) {
             Session::set_flash('error', 'アクセス権限がありません');
             Response::redirect('tasks');
         }
@@ -172,7 +158,7 @@ class Controller_Tasks extends Controller_Base
                 $checklist = Model_TaskChecklist::forge();
                 $checklist->task_id = $task_id;
                 $checklist->title = $title;
-                $checklist->is_completed = 0;
+                $checklist->is_completed = Model_Task::STATUS_INCOMPLETE;
                 $checklist->sort_order = Model_TaskChecklist::query()->where('task_id', $task_id)->count();
 
                 if ($checklist->save()) {
@@ -195,13 +181,7 @@ class Controller_Tasks extends Controller_Base
             Response::redirect('tasks');
         }
 
-        if ($task->project_id) {
-            $project = Model_Project::find($task->project_id);
-            if (!$project || !$project->has_access($user_id[1])) {
-                Session::set_flash('error', 'アクセス権限がありません');
-                Response::redirect('projects');
-            }
-        } else if ($task->user_id != $user_id[1]) {
+        if (!$task->can_edit($user_id[1])) {
             Session::set_flash('error', 'アクセス権限がありません');
             Response::redirect('tasks');
         }
@@ -223,13 +203,7 @@ class Controller_Tasks extends Controller_Base
             Response::redirect('tasks');
         }
 
-        if ($task->project_id) {
-            $project = Model_Project::find($task->project_id);
-            if (!$project || !$project->has_access($user_id[1])) {
-                Session::set_flash('error', 'アクセス権限がありません');
-                Response::redirect('projects');
-            }
-        } else if ($task->user_id != $user_id[1]) {
+        if (!$task->can_edit($user_id[1])) {
             Session::set_flash('error', 'アクセス権限がありません');
             Response::redirect('tasks');
         }
@@ -245,17 +219,23 @@ class Controller_Tasks extends Controller_Base
         $user_id = Auth::get_user_id();
         $task = Model_Task::find($id);
 
-        if (!$task || $task->user_id != $user_id[1]) {
-            Session::set_flash('error', 'タスクが見つかりません');
+        if (!$task || !$task->can_delete($user_id[1])) {
+            Session::set_flash('error', 'アクセス権限がありません');
             Response::redirect('tasks');
         }
 
         $project_id = $task->project_id;
 
-        if ($task->delete()) {
+        try {
+            $task->delete_with_transaction();
             Session::set_flash('success', 'タスクを削除しました');
-        } else {
+        } catch (\Exception $e) {
             Session::set_flash('error', '削除に失敗しました');
+            \Log::error('Task deletion error in controller', array(
+                'task_id' => $id,
+                'user_id' => $user_id[1],
+                'error' => $e->getMessage(),
+            ));
         }
 
         if ($project_id) {
@@ -270,34 +250,9 @@ class Controller_Tasks extends Controller_Base
         $user_id = Auth::get_user_id();
         $task = Model_Task::find($id);
 
-        if (!$task) {
-            Session::set_flash('error', 'タスクが見つかりません');
-            Response::redirect('tasks');
-        }
-
-        // Access control: check if user has permission to toggle this task
-        $has_permission = false;
-
-        if ($task->project_id) {
-            // For project tasks: check if user has access to the project
-            $project = Model_Project::find($task->project_id);
-            if ($project && $project->has_access($user_id[1])) {
-                $has_permission = true;
-            }
-        } else {
-            // For personal tasks: only the owner can toggle
-            if ($task->user_id == $user_id[1]) {
-                $has_permission = true;
-            }
-        }
-
-        if (!$has_permission) {
+        if (!$task || !$task->can_edit($user_id[1])) {
             Session::set_flash('error', 'アクセス権限がありません');
-            if ($task->project_id) {
-                Response::redirect('projects');
-            } else {
-                Response::redirect('tasks');
-            }
+            Response::redirect('tasks');
         }
 
         $task->done = !$task->done;

@@ -23,12 +23,13 @@ services:
     volumes:
       - .:/var/www # 自分のパソコンのプログラムをこのサーバー内に反映させます。
 
-  # --- 3つ目の役割：データベース（MySQL） ---
+  # --- 3つ目の役割：データベース（PostgreSQL） ---
   # 掲示板の投稿内容を保存する「倉庫」です。
   db:
-    image: mysql:8.0 # MySQL 8.0という倉庫を使います。
+    image: postgres:14 # PostgreSQL 14という倉庫を使います（本番環境と同じDBエンジン）。
     environment:
-      MYSQL_DATABASE: fuel_db # 作成するデータベースの名前です。
-      MYSQL_ROOT_PASSWORD: root # 管理者のパスワード。学習用なので覚えやすく「root」にしています。
+      POSTGRES_DB: fuel_db # 作成するデータベースの名前です。
+      POSTGRES_USER: root # データベースのユーザー名です。
+      POSTGRES_PASSWORD: root # 管理者のパスワード。学習用なので覚えやすく「root」にしています。
     ports:
-      - "3306:3306" # データベースに直接アクセスするためのポートです。
+      - "5432:5432" # データベースに直接アクセスするためのポートです（PostgreSQLのデフォルトポート）。

@@ -76,4 +76,29 @@ class Model_Project extends \Orm\Model
 
         return $member ? $member->role : null;
     }
+
+    /**
+     * プロジェクトのタスク統計情報を取得（World Class最適化）
+     *
+     * @param int $project_id プロジェクトID
+     * @return array 統計情報（total, completed, pending）
+     */
+    public static function get_task_statistics($project_id)
+    {
+        $result = \DB::select(
+            \DB::expr('COUNT(*) as total'),
+            \DB::expr('SUM(CASE WHEN done = ' . Model_Task::STATUS_COMPLETE . ' THEN 1 ELSE 0 END) as completed'),
+            \DB::expr('SUM(CASE WHEN done = ' . Model_Task::STATUS_INCOMPLETE . ' THEN 1 ELSE 0 END) as pending')
+        )
+        ->from('tasks')
+        ->where('project_id', '=', $project_id)
+        ->execute()
+        ->current();
+
+        return array(
+            'total' => (int) $result['total'],
+            'completed' => (int) $result['completed'],
+            'pending' => (int) $result['pending'],
+        );
+    }
 }

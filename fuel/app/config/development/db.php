@@ -21,10 +21,13 @@
 
 return array(
 	'default' => array(
+		'type'       => 'pdo',
 		'connection' => array(
-			'dsn'      => 'mysql:host=db;dbname=fuel_db',
+			'dsn'      => 'pgsql:host=db;port=5432;dbname=fuel_db',
 			'username' => 'root',
 			'password' => 'root',
 		),
+		'identifier' => '"',
+		'charset'    => 'utf8',
 	),
 );
