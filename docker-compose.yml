@@ -33,3 +33,5 @@ services:
       POSTGRES_PASSWORD: root # 管理者のパスワード。学習用なので覚えやすく「root」にしています。
     ports:
       - "5432:5432" # データベースに直接アクセスするためのポートです（PostgreSQLのデフォルトポート）。
+    volumes:
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql # 初回起動時に自動的にテーブルを作成します。

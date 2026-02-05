@@ -27,6 +27,7 @@ return array(
 			'username' => 'root',
 			'password' => 'root',
 		),
+		'driver'     => 'pgsql',
 		'identifier' => '"',
 		'charset'    => 'utf8',
 	),

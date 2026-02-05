@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo_mysql mbstring gd
+    libpq-dev \
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring gd
 
 # 3. 「Composer（コンポーザー）」というツールを入れます。
 # これは、FuelPHPなどの「他人が作った便利な部品」を簡単に取り入れるための道具です。
