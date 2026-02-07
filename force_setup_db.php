@@ -114,7 +114,7 @@ try {
         \"ip_hash\" char(32) NOT NULL DEFAULT '',
         \"created\" int DEFAULT 0 NOT NULL,
         \"updated\" int DEFAULT 0 NOT NULL,
-        \"payload\" longtext NOT NULL
+        \"payload\" text NOT NULL
     )");
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS \"previous_id_index\" ON \"sessions\" (\"previous_id\")");
     echo "Verified 'sessions' table.\n";
