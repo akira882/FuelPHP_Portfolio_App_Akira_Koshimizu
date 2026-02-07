@@ -106,6 +106,19 @@ try {
     )");
     echo "Verified 'project_files' table.\n";
 
+    // 7. Sessions Table (for database session driver)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS \"sessions\" (
+        \"session_id\" varchar(40) NOT NULL PRIMARY KEY,
+        \"previous_id\" varchar(40) NOT NULL,
+        \"user_agent\" text NOT NULL,
+        \"ip_hash\" char(32) NOT NULL DEFAULT '',
+        \"created\" int DEFAULT 0 NOT NULL,
+        \"updated\" int DEFAULT 0 NOT NULL,
+        \"payload\" longtext NOT NULL
+    )");
+    $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS \"previous_id_index\" ON \"sessions\" (\"previous_id\")");
+    echo "Verified 'sessions' table.\n";
+
     echo "Forced database setup completed successfully.\n";
 
 } catch (Exception $e) {
