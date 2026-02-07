@@ -27,6 +27,7 @@ try {
         \"id\" SERIAL PRIMARY KEY,
         \"username\" VARCHAR(50) NOT NULL UNIQUE,
         \"password\" VARCHAR(255) NOT NULL,
+        \"salt\" VARCHAR(32) NOT NULL DEFAULT '',
         \"group\" INTEGER DEFAULT 1,
         \"email\" VARCHAR(255) NOT NULL UNIQUE,
         \"last_login\" VARCHAR(25) DEFAULT '0',
@@ -35,7 +36,10 @@ try {
         \"created_at\" INTEGER DEFAULT 0,
         \"updated_at\" INTEGER DEFAULT 0
     )");
-    echo "Verified 'users' table.\n";
+    
+    // Existing table support: Add salt column if it was missed during initial setup
+    $pdo->exec("ALTER TABLE \"users\" ADD COLUMN IF NOT EXISTS \"salt\" VARCHAR(32) NOT NULL DEFAULT ''");
+    echo "Verified 'users' table (including 'salt' column).\n";
 
     // 2. Projects Table
     $pdo->exec("CREATE TABLE IF NOT EXISTS \"projects\" (
